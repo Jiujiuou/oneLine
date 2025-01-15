@@ -1,0 +1,2 @@
+#!/bin/sh
+# rm -f index.html && git add index.html && echo "已删除根目录下的 index.html 文件"

@@ -1,0 +1,78 @@
+.messageContainer {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  min-width: 280px;
+  max-width: 400px;
+  padding: 0.875rem 1.25rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  font-family: inherit;
+  border: 1px solid;
+  box-shadow: var(--shadow-md);
+}
+
+.messageLight {
+  background: rgba(0, 0, 0, 0.9);
+  color: #fafafa;
+  border-color: rgba(64, 64, 64, 0.3);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.8),
+    0 4px 6px -2px rgba(0, 0, 0, 0.6);
+}
+
+.messageDark {
+  background: rgba(38, 38, 38, 0.95);
+  color: #fafafa;
+  border-color: rgba(100, 100, 100, 0.3);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.9),
+    0 4px 6px -2px rgba(0, 0, 0, 0.7);
+}
+
+/* 消息类型 - 不再使用彩色边框 */
+.messageSuccess {
+}
+
+.messageError {
+}
+
+.messageWarning {
+}
+
+.messageInfo {
+}
+
+/* 浮动消息动画 */
+.messageFloating {
+  animation: slideDown 0.3s ease-out;
+}
+
+.messageHidden {
+  animation: slideUp 0.3s ease-in forwards;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+}
