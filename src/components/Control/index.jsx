@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useGameStore, useMessageStore } from "@/store";
-import { Button } from "@/components";
+import { Button, Timer } from "@/components";
 import styles from "./index.module.less";
 
 function Control() {
@@ -29,6 +29,8 @@ function Control() {
           <span className={styles.levelLabel}>LEVEL</span>
           <span className={styles.levelNumber}>{currentLevel}</span>
         </div>
+
+        <Timer />
 
         <Button
           text={gameState === "WON" ? "下一关" : "跳过本关"}

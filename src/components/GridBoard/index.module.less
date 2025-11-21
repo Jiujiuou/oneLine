@@ -21,12 +21,27 @@
   max-height: 100%;
   aspect-ratio: 1;
   /* 确保 z-index context */
-  isolation: isolate; 
+  isolation: isolate;
+  transition: transform 0.5s ease;
+}
+
+.gridContainer.breathing {
+  animation: breathing 2s ease-in-out infinite;
+}
+
+@keyframes breathing {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
 }
 
 .svgLayer {
-    /* SVG 样式 */
-    overflow: visible; /* 允许线条圆头稍微溢出一点 */
+  /* SVG 样式 */
+  overflow: visible; /* 允许线条圆头稍微溢出一点 */
 }
 
 .cell {

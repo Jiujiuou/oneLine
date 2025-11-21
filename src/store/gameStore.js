@@ -21,6 +21,10 @@ export const useGameStore = create((set, get) => ({
   // --- 玩家状态 ---
   userPath: [],     // 用户当前画的路径 [{r,c}, ...]
   gameState: 'IDLE', // IDLE, PLAYING, WON, LOST
+  
+  // --- 计时器状态 ---
+  timerStartTime: null,  // 计时开始时间戳（毫秒）
+  timerEndTime: null,    // 计时结束时间戳（毫秒，游戏成功时设置）
 
   // --- Actions ---
   
@@ -52,7 +56,9 @@ export const useGameStore = create((set, get) => ({
         hints,
         fullPath: path,
         userPath: [],
-        gameState: 'PLAYING'
+        gameState: 'PLAYING',
+        timerStartTime: Date.now(), // 开始计时
+        timerEndTime: null // 重置结束时间
     });
 
     return { success: true };
@@ -89,7 +95,30 @@ export const useGameStore = create((set, get) => ({
 
   // 重置当前游戏
   resetGame: () => {
-    set({ userPath: [], gameState: 'PLAYING' });
+    set({ 
+      userPath: [], 
+      gameState: 'PLAYING',
+      timerStartTime: Date.now(), // 重新开始计时
+      timerEndTime: null // 重置结束时间
+    });
+  },
+  
+  // 获取当前计时时间（毫秒）
+  getTimerElapsed: () => {
+    const { timerStartTime, timerEndTime, gameState } = get();
+    if (!timerStartTime) return 0;
+    
+    // 如果游戏已成功，返回固定时间
+    if (gameState === 'WON' && timerEndTime) {
+      return timerEndTime - timerStartTime;
+    }
+    
+    // 如果游戏进行中，返回当前时间差
+    if (gameState === 'PLAYING') {
+      return Date.now() - timerStartTime;
+    }
+    
+    return 0;
   },
   
   // 更新用户路径并检查胜利
@@ -117,7 +146,10 @@ export const useGameStore = create((set, get) => ({
       }
 
       // 3. 如果都通过，胜利！
-      set({ gameState: 'WON' });
+      set({ 
+        gameState: 'WON',
+        timerEndTime: Date.now() // 停止计时
+      });
   },
 }));
 

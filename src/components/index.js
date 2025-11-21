@@ -9,4 +9,5 @@ export { default as Layout } from "./Layout";
 export { default as Message } from "./Message";
 export { default as Preview } from "./Preview";
 export { default as Switch } from "./Switch";
+export { default as Timer } from "./Timer";
 export { default as Tooltip } from "./Tooltip";

@@ -323,7 +323,7 @@ const GridBoard = ({ theme }) => {
       }}
     >
       <div
-        className={styles.gridContainer}
+        className={`${styles.gridContainer} ${gameState === "WON" ? styles.breathing : ""}`}
         style={{
           gridTemplateColumns: `repeat(${cols}, ${cellSize}px)`,
           gridTemplateRows: `repeat(${rows}, ${cellSize}px)`,

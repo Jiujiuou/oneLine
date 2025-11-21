@@ -18,7 +18,7 @@ function Header() {
 
   return (
     <div className={styles.header}>
-      <div className={styles.name}>Jiujiu-Tool</div>
+      <div className={styles.name}>Jiujiu-Game</div>
       <div className={styles.soundControl}>
         <DropdownSelect
           label="音效"
