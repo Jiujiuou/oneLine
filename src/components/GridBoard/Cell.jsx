@@ -22,12 +22,12 @@ const Cell = ({
   // 根据状态获取对应的颜色样式
   const getThemeStyle = () => {
     const { colors } = theme;
-    
+
     const baseStyle = {
       backgroundColor: colors.cellBg,
       borderColor: colors.cellBorder,
-      color: colors.activeText, 
-      cursor: status === 'obstacle' ? 'not-allowed' : 'pointer',
+      color: colors.activeText,
+      cursor: status === "obstacle" ? "not-allowed" : "pointer",
     };
 
     switch (status) {
@@ -75,9 +75,15 @@ const Cell = ({
     }
   };
 
+  // 障碍物需要特殊样式类
+  const cellClassName =
+    status === "obstacle"
+      ? `${styles.cell} ${styles.cellObstacle}`
+      : styles.cell;
+
   return (
     <div
-      className={styles.cell}
+      className={cellClassName}
       style={{ ...style, ...getThemeStyle() }}
       onMouseDown={onMouseDown}
       onMouseEnter={onMouseEnter}
@@ -85,13 +91,24 @@ const Cell = ({
       {...rest}
     >
       {status !== "normal" && status !== "obstacle" && value}
+      {/* 障碍物可以显示一个图标或符号 */}
+      {status === "obstacle" && (
+        <span style={{ fontSize: "1em", opacity: 0.7 }}></span>
+      )}
     </div>
   );
 };
 
 Cell.propTypes = {
   value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-  status: PropTypes.oneOf(["normal", "hint", "active", "success", "error", "obstacle"]),
+  status: PropTypes.oneOf([
+    "normal",
+    "hint",
+    "active",
+    "success",
+    "error",
+    "obstacle",
+  ]),
   theme: PropTypes.object.isRequired,
   style: PropTypes.object,
   onMouseDown: PropTypes.func,

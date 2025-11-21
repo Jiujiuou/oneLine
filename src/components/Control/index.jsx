@@ -11,7 +11,7 @@ function Control() {
   // 初始加载第一关
   useEffect(() => {
     generateGame();
-  }, []); // 只在挂载时执行一次
+  }, []);
 
   const handleNextLevel = () => {
     const result = nextLevel();

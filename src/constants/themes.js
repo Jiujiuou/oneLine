@@ -30,8 +30,9 @@ export const BOARD_THEMES = {
       errorText: "#000000",
       errorBorder: "#ff7875", // 错误格边框 (Red-5)
 
-      obstacleBg: "#434343",
+      obstacleBg: "#3a3a3a", // 稍浅一点，因为CSS会添加渐变
       obstacleText: "#ffffff",
+      obstacleBorder: "#2a2a2a",
       line: "#1890ff",
     },
   },

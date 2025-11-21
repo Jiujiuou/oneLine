@@ -46,9 +46,25 @@ const DIFFICULTY_SETTINGS = {
     maxHidden: 0.8,
     obstacles: 0,
   },
+  // 大师: 5x5, 1个障碍物, 隐藏率 70%-80% (显示 5-8 个)
+  MASTER: {
+    rows: 5,
+    cols: 5,
+    minHidden: 0.7,
+    maxHidden: 0.8,
+    obstacles: 1,
+  },
+  // 宗师: 5x5, 2个障碍物, 隐藏率 70%-80% (显示 5-8 个)
+  GRANDMASTER: {
+    rows: 5,
+    cols: 5,
+    minHidden: 0.7,
+    maxHidden: 0.8,
+    obstacles: 2,
+  },
 };
 
-const levelCount = 3;
+const levelCount = 2;
 
 /**
  * 获取指定关卡的配置
@@ -59,16 +75,26 @@ export const getLevelConfig = (level) => {
   let settings;
 
   if (level <= levelCount) {
+    // Lv. 1-2: 入门
     settings = DIFFICULTY_SETTINGS.TUTORIAL;
   } else if (level <= levelCount * 2) {
+    // Lv. 3-4: 初级
     settings = DIFFICULTY_SETTINGS.EASY;
   } else if (level <= levelCount * 3) {
+    // Lv. 5-6: 中级
     settings = DIFFICULTY_SETTINGS.NORMAL;
   } else if (level <= levelCount * 4) {
+    // Lv. 7-8: 进阶
     settings = DIFFICULTY_SETTINGS.HARD;
-  } else {
-    // Lv. 41-50 及以上默认使用 EXPERT，后续可扩展 MASTER
+  } else if (level <= levelCount * 5) {
+    // Lv. 9-10: 高级
     settings = DIFFICULTY_SETTINGS.EXPERT;
+  } else if (level <= levelCount * 6) {
+    // Lv. 11-12: 大师
+    settings = DIFFICULTY_SETTINGS.MASTER;
+  } else {
+    // Lv. 13+: 宗师
+    settings = DIFFICULTY_SETTINGS.GRANDMASTER;
   }
 
   // 计算当前关卡的具体隐藏率

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { generateHamiltonianPath } from "@/utils/hamiltonian";
 import { generatePuzzle } from "@/utils/puzzleGenerator";
 import { getLevelConfig } from "@/constants/levelConfig";
+import { generateObstacles } from "@/utils/obstacleGenerator";
 
 /**
  * 游戏核心状态 Store
@@ -32,10 +33,19 @@ export const useGameStore = create((set, get) => ({
   _generateGameByLevel: (level) => {
     const config = getLevelConfig(level);
     
-    // 尝试生成有效路径 (最多重试 10 次，增加重试次数以防万一)
+    // 1. 生成障碍物（如果有）
+    let obstacles = [];
+    if (config.obstaclesCount > 0) {
+      obstacles = generateObstacles(config.rows, config.cols, config.obstaclesCount);
+      if (!obstacles) {
+        return { success: false, message: `关卡 ${level} 障碍物生成失败，请重试` };
+      }
+    }
+    
+    // 2. 尝试生成有效路径 (最多重试 10 次，增加重试次数以防万一)
     let path = null;
     for (let i = 0; i < 10; i++) {
-        path = generateHamiltonianPath(config.rows, config.cols, []);
+        path = generateHamiltonianPath(config.rows, config.cols, obstacles);
         if (path) break;
     }
     
@@ -43,16 +53,16 @@ export const useGameStore = create((set, get) => ({
       return { success: false, message: `关卡 ${level} 生成失败，请重试` };
     }
 
-    // 挖空生成谜题
+    // 3. 挖空生成谜题
     const { hints } = generatePuzzle(path, config.hiddenRate);
 
-    // 一切成功后，统一更新状态
+    // 4. 一切成功后，统一更新状态
     set({
         currentLevel: level,
         rows: config.rows,
         cols: config.cols,
         hiddenRate: config.hiddenRate,
-        obstacles: [], // 目前无障碍
+        obstacles: obstacles,
         hints,
         fullPath: path,
         userPath: [],
@@ -150,6 +160,50 @@ export const useGameStore = create((set, get) => ({
         gameState: 'WON',
         timerEndTime: Date.now() // 停止计时
       });
+  },
+
+  // 测试方法：生成 5x5 带障碍物的关卡
+  generateTestLevelWithObstacles: (obstacleCount = 2) => {
+    const rows = 5;
+    const cols = 5;
+    const hiddenRate = 0.75; // 隐藏率 75%
+
+    // 1. 生成障碍物
+    const obstacles = generateObstacles(rows, cols, obstacleCount);
+    if (!obstacles) {
+      return { success: false, message: "无法生成有效的障碍物配置" };
+    }
+
+    // 2. 生成路径
+    let path = null;
+    for (let i = 0; i < 10; i++) {
+      path = generateHamiltonianPath(rows, cols, obstacles);
+      if (path) break;
+    }
+
+    if (!path) {
+      return { success: false, message: "无法生成有效路径" };
+    }
+
+    // 3. 生成谜题
+    const { hints } = generatePuzzle(path, hiddenRate);
+
+    // 4. 更新状态
+    set({
+      currentLevel: 999, // 测试关卡
+      rows,
+      cols,
+      hiddenRate,
+      obstacles,
+      hints,
+      fullPath: path,
+      userPath: [],
+      gameState: 'PLAYING',
+      timerStartTime: Date.now(),
+      timerEndTime: null
+    });
+
+    return { success: true, message: `成功生成 5x5 关卡，包含 ${obstacleCount} 个障碍物` };
   },
 }));
 
