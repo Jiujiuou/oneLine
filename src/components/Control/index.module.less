@@ -76,9 +76,9 @@
 }
 
 .buttonGroup {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 12px;
+  align-items: stretch;
 }
 
 .victoryMessage {
@@ -97,7 +97,31 @@
 
 .nextLevelButton {
   margin-top: 0;
-  width: 100%;
+  flex: 1;
+}
+
+.tipButton {
+  margin-top: 0;
+  min-width: 40px;
+}
+
+.lineColorSelect {
+  margin-top: 0;
+}
+
+.colorOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colorIndicator {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
 @keyframes fadeIn {

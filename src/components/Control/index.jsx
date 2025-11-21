@@ -5,7 +5,6 @@ import styles from "./index.module.less";
 
 function Control() {
   const { currentLevel, generateGame, nextLevel, gameState } = useGameStore();
-
   const { showMessage } = useMessageStore();
 
   // 初始加载第一关
@@ -32,13 +31,22 @@ function Control() {
 
         <Timer />
 
-        <Button
-          text={gameState === "WON" ? "下一关" : "跳过本关"}
-          type={gameState === "WON" ? "primary" : "secondary"}
-          size="medium"
-          onClick={handleNextLevel}
-          className={styles.nextLevelButton}
-        />
+        <div className={styles.buttonGroup}>
+          <Button
+            text="💡"
+            type="secondary"
+            size="medium"
+            onClick={() => {}}
+            className={styles.tipButton}
+          />
+          <Button
+            text={gameState === "WON" ? "下一关" : "跳过本关"}
+            type={gameState === "WON" ? "primary" : "secondary"}
+            size="medium"
+            onClick={handleNextLevel}
+            className={styles.nextLevelButton}
+          />
+        </div>
       </div>
     </div>
   );

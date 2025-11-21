@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
-import { useGameStore, useSoundStore } from "@/store";
+import { useGameStore, useSoundStore, useThemeStore } from "@/store";
 import {
   playClickSound,
   playCompleteSound,
   playErrorSound,
 } from "@/utils/sound";
+import { LINE_COLOR_PRESETS } from "@/constants/lineColors";
 import Cell from "./Cell";
 import styles from "./index.module.less";
 
@@ -18,6 +19,13 @@ const GridBoard = ({ theme }) => {
   const { rows, cols, hints, userPath, obstacles, setUserPath, gameState } =
     useGameStore();
   const { currentPreset } = useSoundStore();
+  const { lineColorPresetId } = useThemeStore();
+
+  // 获取当前选择的路径颜色
+  const getLineColor = () => {
+    const preset = LINE_COLOR_PRESETS.find((p) => p.id === lineColorPresetId);
+    return preset ? preset.color : theme.colors.line;
+  };
   const [gridData, setGridData] = useState([]);
   const containerRef = useRef(null);
   const [cellSize, setCellSize] = useState(50);
@@ -289,21 +297,107 @@ const GridBoard = ({ theme }) => {
     const padding = 12;
     const gap = 8;
     const halfCell = cellSize / 2;
+    const curveRadius = 10; // 弧线半径，控制转角的平滑程度
 
     const getCenter = (r, c) => {
       const x = padding + c * (cellSize + gap) + halfCell;
       const y = padding + r * (cellSize + gap) + halfCell;
-      return `${x},${y}`;
+      return { x, y };
     };
 
-    const d = userPath
-      .map((pos, i) => {
-        const point = getCenter(pos.r, pos.c);
-        return i === 0 ? `M ${point}` : `L ${point}`;
-      })
-      .join(" ");
+    if (userPath.length === 2) {
+      // 只有两个点时，直接连线
+      const start = getCenter(userPath[0].r, userPath[0].c);
+      const end = getCenter(userPath[1].r, userPath[1].c);
+      return `M ${start.x},${start.y} L ${end.x},${end.y}`;
+    }
 
-    return d;
+    // 使用直线段 + 转角弧线的方式绘制路径
+    const pathCommands = [];
+    const start = getCenter(userPath[0].r, userPath[0].c);
+    pathCommands.push(`M ${start.x},${start.y}`);
+
+    for (let i = 0; i < userPath.length - 1; i++) {
+      const current = getCenter(userPath[i].r, userPath[i].c);
+      const next = getCenter(userPath[i + 1].r, userPath[i + 1].c);
+
+      if (i === userPath.length - 2) {
+        // 最后一个点，检查是否是转角
+        if (userPath.length > 2) {
+          const prev = getCenter(userPath[i - 1].r, userPath[i - 1].c);
+          const dx1 = current.x - prev.x;
+          const dy1 = current.y - prev.y;
+          const dx2 = next.x - current.x;
+          const dy2 = next.y - current.y;
+          const isCorner = (dx1 !== 0 && dy2 !== 0) || (dy1 !== 0 && dx2 !== 0);
+
+          if (isCorner) {
+            // 最后一个转角，先画直线到转角前
+            const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+            const radius = Math.min(curveRadius, dist2 * 0.4);
+            const ratio = radius / dist2;
+            const beforeCornerX = next.x - dx2 * ratio;
+            const beforeCornerY = next.y - dy2 * ratio;
+            pathCommands.push(`L ${beforeCornerX},${beforeCornerY}`);
+
+            // 用三次贝塞尔曲线连接到终点，确保路径经过转角点
+            const control1X = next.x - dx2 * ratio * 0.3;
+            const control1Y = next.y - dy2 * ratio * 0.3;
+            const control2X = next.x;
+            const control2Y = next.y;
+            pathCommands.push(
+              `C ${control1X},${control1Y} ${control2X},${control2Y} ${next.x},${next.y}`
+            );
+          } else {
+            pathCommands.push(`L ${next.x},${next.y}`);
+          }
+        } else {
+          pathCommands.push(`L ${next.x},${next.y}`);
+        }
+      } else {
+        // 检查下一个点是否是转角
+        const afterNext = getCenter(userPath[i + 2].r, userPath[i + 2].c);
+        const dx1 = next.x - current.x;
+        const dy1 = next.y - current.y;
+        const dx2 = afterNext.x - next.x;
+        const dy2 = afterNext.y - next.y;
+        const isCorner = (dx1 !== 0 && dy2 !== 0) || (dy1 !== 0 && dx2 !== 0);
+
+        if (isCorner) {
+          // 有转角，先画直线到转角前
+          const dist1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+          const radius = Math.min(curveRadius, dist1 * 0.4);
+          const ratio = radius / dist1;
+          const beforeCornerX = next.x - dx1 * ratio;
+          const beforeCornerY = next.y - dy1 * ratio;
+          pathCommands.push(`L ${beforeCornerX},${beforeCornerY}`);
+
+          // 用三次贝塞尔曲线连接转角，确保路径经过转角点
+          const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+          const ratio2 = Math.min(radius, dist2 * 0.4) / dist2;
+          const afterCornerX = next.x + dx2 * ratio2;
+          const afterCornerY = next.y + dy2 * ratio2;
+
+          // 计算控制点，使路径平滑地经过转角点
+          // 第一个控制点：在转角点前，稍微向转角点偏移
+          const control1X = next.x - dx1 * ratio * 0.3;
+          const control1Y = next.y - dy1 * ratio * 0.3;
+          // 第二个控制点：在转角点后，稍微向转角点偏移
+          const control2X = next.x + dx2 * ratio2 * 0.3;
+          const control2Y = next.y + dy2 * ratio2 * 0.3;
+
+          // 使用三次贝塞尔曲线，路径会平滑地经过转角点
+          pathCommands.push(
+            `C ${control1X},${control1Y} ${control2X},${control2Y} ${afterCornerX},${afterCornerY}`
+          );
+        } else {
+          // 没有转角，直接画直线
+          pathCommands.push(`L ${next.x},${next.y}`);
+        }
+      }
+    }
+
+    return pathCommands.join(" ");
   };
 
   return (
@@ -323,7 +417,9 @@ const GridBoard = ({ theme }) => {
       }}
     >
       <div
-        className={`${styles.gridContainer} ${gameState === "WON" ? styles.breathing : ""}`}
+        className={`${styles.gridContainer} ${
+          gameState === "WON" ? styles.breathing : ""
+        }`}
         style={{
           gridTemplateColumns: `repeat(${cols}, ${cellSize}px)`,
           gridTemplateRows: `repeat(${rows}, ${cellSize}px)`,
@@ -340,12 +436,12 @@ const GridBoard = ({ theme }) => {
             width: "100%",
             height: "100%",
             pointerEvents: "none",
-            zIndex: 0,
+            zIndex: 2,
           }}
         >
           <path
             d={getSvgPath()}
-            stroke={theme.colors.line}
+            stroke={getLineColor()}
             strokeWidth="6"
             strokeLinecap="round"
             strokeLinejoin="round"
