@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { THEME_TYPES } from "@/constants";
+import { BOARD_THEMES } from "@/constants/themes";
 
 /**
  * 主题状态管理Store
@@ -8,10 +9,13 @@ import { THEME_TYPES } from "@/constants";
 export const useThemeStore = create(
   persist(
     (set) => ({
-      // 主题状态
+      // App 整体明暗模式
       theme: THEME_TYPES.LIGHT,
+      
+      // 游戏棋盘主题 (默认经典蓝)
+      boardThemeId: 'DEFAULT', 
 
-      // 主题切换
+      // 切换明暗模式
       toggleTheme: () => {
         set((state) => ({
           theme:
@@ -21,10 +25,17 @@ export const useThemeStore = create(
         }));
       },
 
-      // 设置主题
+      // 设置明暗模式
       setTheme: (theme) => {
         set({ theme });
       },
+
+      // 设置棋盘主题
+      setBoardThemeId: (id) => {
+        if (BOARD_THEMES[id]) {
+            set({ boardThemeId: id });
+        }
+      }
     }),
     {
       name: "theme-store",

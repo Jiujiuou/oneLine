@@ -1,11 +1,76 @@
 .control {
   width: 300px;
-  font-weight: bold;
   box-sizing: border-box;
   padding: 20px;
   height: 100%;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid #e5e7eb;
-  user-select: none;
+  gap: 24px;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  z-index: 10;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
+.levelDisplay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+  background: #f5f7fa;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.levelLabel {
+  font-size: 14px;
+  color: #888;
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+.levelNumber {
+  font-size: 48px;
+  font-weight: 700;
+  color: #333;
+  line-height: 1;
+  margin-top: 4px;
+  font-family: 'Monaco', monospace;
+}
+
+.buttonGroup {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.victoryMessage {
+  padding: 12px;
+  background: #e6f7ff;
+  border: 1px solid #91d5ff;
+  color: #1890ff;
+  border-radius: 4px;
+  text-align: center;
+  font-weight: 500;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
