@@ -4,7 +4,8 @@ import { Button, Timer } from "@/components";
 import styles from "./index.module.less";
 
 function Control() {
-  const { currentLevel, generateGame, nextLevel, gameState } = useGameStore();
+  const { currentLevel, generateGame, nextLevel, gameState, showNextHint } =
+    useGameStore();
   const { showMessage } = useMessageStore();
 
   // 初始加载第一关
@@ -18,6 +19,17 @@ function Control() {
       showMessage(`已进入第 ${currentLevel + 1} 关`, "success");
     } else {
       showMessage(result.message, "error");
+    }
+  };
+
+  const handleTipClick = () => {
+    if (gameState === "PLAYING") {
+      // 20% 概率触发提示消息，不显示路径
+      if (Math.random() < 0.2) {
+        showMessage("自己动脑想想！", "info");
+      } else {
+        showNextHint();
+      }
     }
   };
 
@@ -36,7 +48,8 @@ function Control() {
             text="💡"
             type="secondary"
             size="medium"
-            onClick={() => {}}
+            onClick={handleTipClick}
+            disabled={gameState === "WON"}
             className={styles.tipButton}
           />
           <Button

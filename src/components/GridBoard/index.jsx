@@ -16,8 +16,17 @@ import styles from "./index.module.less";
  * @param {Object} props.theme - 当前主题配置
  */
 const GridBoard = ({ theme }) => {
-  const { rows, cols, hints, userPath, obstacles, setUserPath, gameState } =
-    useGameStore();
+  const {
+    rows,
+    cols,
+    hints,
+    userPath,
+    obstacles,
+    setUserPath,
+    gameState,
+    fullPath,
+    hintPathLength,
+  } = useGameStore();
   const { currentPreset } = useSoundStore();
   const { lineColorPresetId } = useThemeStore();
 
@@ -400,6 +409,106 @@ const GridBoard = ({ theme }) => {
     return pathCommands.join(" ");
   };
 
+  // 获取提示路径的 SVG 路径
+  const getHintSvgPath = () => {
+    if (!fullPath || fullPath.length === 0 || hintPathLength === 0) return "";
+
+    const hintPath = fullPath.slice(0, hintPathLength);
+    if (hintPath.length < 2) return "";
+
+    const padding = 12;
+    const gap = 8;
+    const halfCell = cellSize / 2;
+    const curveRadius = 10;
+
+    const getCenter = (r, c) => {
+      const x = padding + c * (cellSize + gap) + halfCell;
+      const y = padding + r * (cellSize + gap) + halfCell;
+      return { x, y };
+    };
+
+    if (hintPath.length === 2) {
+      const start = getCenter(hintPath[0].r, hintPath[0].c);
+      const end = getCenter(hintPath[1].r, hintPath[1].c);
+      return `M ${start.x},${start.y} L ${end.x},${end.y}`;
+    }
+
+    const pathCommands = [];
+    const start = getCenter(hintPath[0].r, hintPath[0].c);
+    pathCommands.push(`M ${start.x},${start.y}`);
+
+    for (let i = 0; i < hintPath.length - 1; i++) {
+      const current = getCenter(hintPath[i].r, hintPath[i].c);
+      const next = getCenter(hintPath[i + 1].r, hintPath[i + 1].c);
+
+      if (i === hintPath.length - 2) {
+        if (hintPath.length > 2) {
+          const prev = getCenter(hintPath[i - 1].r, hintPath[i - 1].c);
+          const dx1 = current.x - prev.x;
+          const dy1 = current.y - prev.y;
+          const dx2 = next.x - current.x;
+          const dy2 = next.y - current.y;
+          const isCorner = (dx1 !== 0 && dy2 !== 0) || (dy1 !== 0 && dx2 !== 0);
+
+          if (isCorner) {
+            const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+            const radius = Math.min(curveRadius, dist2 * 0.4);
+            const ratio = radius / dist2;
+            const beforeCornerX = next.x - dx2 * ratio;
+            const beforeCornerY = next.y - dy2 * ratio;
+            pathCommands.push(`L ${beforeCornerX},${beforeCornerY}`);
+
+            const control1X = next.x - dx2 * ratio * 0.3;
+            const control1Y = next.y - dy2 * ratio * 0.3;
+            const control2X = next.x;
+            const control2Y = next.y;
+            pathCommands.push(
+              `C ${control1X},${control1Y} ${control2X},${control2Y} ${next.x},${next.y}`
+            );
+          } else {
+            pathCommands.push(`L ${next.x},${next.y}`);
+          }
+        } else {
+          pathCommands.push(`L ${next.x},${next.y}`);
+        }
+      } else {
+        const afterNext = getCenter(hintPath[i + 2].r, hintPath[i + 2].c);
+        const dx1 = next.x - current.x;
+        const dy1 = next.y - current.y;
+        const dx2 = afterNext.x - next.x;
+        const dy2 = afterNext.y - next.y;
+        const isCorner = (dx1 !== 0 && dy2 !== 0) || (dy1 !== 0 && dx2 !== 0);
+
+        if (isCorner) {
+          const dist1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+          const radius = Math.min(curveRadius, dist1 * 0.4);
+          const ratio = radius / dist1;
+          const beforeCornerX = next.x - dx1 * ratio;
+          const beforeCornerY = next.y - dy1 * ratio;
+          pathCommands.push(`L ${beforeCornerX},${beforeCornerY}`);
+
+          const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+          const ratio2 = Math.min(radius, dist2 * 0.4) / dist2;
+          const afterCornerX = next.x + dx2 * ratio2;
+          const afterCornerY = next.y + dy2 * ratio2;
+
+          const control1X = next.x - dx1 * ratio * 0.3;
+          const control1Y = next.y - dy1 * ratio * 0.3;
+          const control2X = next.x + dx2 * ratio2 * 0.3;
+          const control2Y = next.y + dy2 * ratio2 * 0.3;
+
+          pathCommands.push(
+            `C ${control1X},${control1Y} ${control2X},${control2Y} ${afterCornerX},${afterCornerY}`
+          );
+        } else {
+          pathCommands.push(`L ${next.x},${next.y}`);
+        }
+      }
+    }
+
+    return pathCommands.join(" ");
+  };
+
   return (
     <div
       ref={containerRef}
@@ -439,6 +548,20 @@ const GridBoard = ({ theme }) => {
             zIndex: 2,
           }}
         >
+          {/* 提示路径（虚线，显示在用户路径下方，仅在游戏进行中显示） */}
+          {hintPathLength > 0 && gameState === "PLAYING" && (
+            <path
+              d={getHintSvgPath()}
+              stroke={getLineColor()}
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray="8 4"
+              fill="none"
+              opacity="0.5"
+            />
+          )}
+          {/* 用户路径（实线，显示在提示路径上方） */}
           <path
             d={getSvgPath()}
             stroke={getLineColor()}

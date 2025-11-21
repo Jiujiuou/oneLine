@@ -22,6 +22,7 @@ export const useGameStore = create((set, get) => ({
   // --- 玩家状态 ---
   userPath: [],     // 用户当前画的路径 [{r,c}, ...]
   gameState: 'IDLE', // IDLE, PLAYING, WON, LOST
+  hintPathLength: 0, // 当前显示的提示路径长度（点击💡按钮时逐步增加）
   
   // --- 计时器状态 ---
   timerStartTime: null,  // 计时开始时间戳（毫秒）
@@ -67,6 +68,7 @@ export const useGameStore = create((set, get) => ({
         fullPath: path,
         userPath: [],
         gameState: 'PLAYING',
+        hintPathLength: 0, // 重置提示路径长度
         timerStartTime: Date.now(), // 开始计时
         timerEndTime: null // 重置结束时间
     });
@@ -108,9 +110,27 @@ export const useGameStore = create((set, get) => ({
     set({ 
       userPath: [], 
       gameState: 'PLAYING',
+      hintPathLength: 0, // 重置提示路径长度
       timerStartTime: Date.now(), // 重新开始计时
       timerEndTime: null // 重置结束时间
     });
+  },
+
+  // 显示下一段提示路径
+  showNextHint: () => {
+    const { fullPath, hintPathLength } = get();
+    if (!fullPath || fullPath.length === 0) return;
+    
+    let newLength;
+    if (hintPathLength === 0) {
+      // 第一次点击：直接显示第一段路线（需要2个格子）
+      newLength = Math.min(2, fullPath.length);
+    } else {
+      // 之后每次点击：只增加1个格子，显示下一段路径
+      newLength = Math.min(hintPathLength + 1, fullPath.length);
+    }
+    
+    set({ hintPathLength: newLength });
   },
   
   // 获取当前计时时间（毫秒）
@@ -199,6 +219,7 @@ export const useGameStore = create((set, get) => ({
       fullPath: path,
       userPath: [],
       gameState: 'PLAYING',
+      hintPathLength: 0, // 重置提示路径长度
       timerStartTime: Date.now(),
       timerEndTime: null
     });
