@@ -26,6 +26,7 @@ const GridBoard = ({ theme }) => {
     gameState,
     fullPath,
     hintPathLength,
+    moveMode,
   } = useGameStore();
   const { currentPreset } = useSoundStore();
   const { lineColorPresetId } = useThemeStore();
@@ -70,6 +71,77 @@ const GridBoard = ({ theme }) => {
 
   const getCellKey = (r, c) => `${r},${c}`;
 
+  // 判断两个格子是否相邻（根据移动模式）
+  const isNeighbor = (r1, c1, r2, c2) => {
+    const dr = Math.abs(r2 - r1);
+    const dc = Math.abs(c2 - c1);
+
+    if (moveMode === "diagonal") {
+      // 地狱模式：允许8方向移动（包括斜向）
+      // 相邻条件：dr <= 1 && dc <= 1 && (dr + dc) > 0
+      return dr <= 1 && dc <= 1 && dr + dc > 0;
+    } else {
+      // 标准模式：只允许4方向移动（正交）
+      return (dr === 1 && dc === 0) || (dr === 0 && dc === 1);
+    }
+  };
+
+  // 检测两条线段是否相交（用于防止路径交叉）
+  // 使用向量叉积方法检测线段相交
+  const doSegmentsIntersect = (p1, p2, p3, p4) => {
+    // 将格子坐标转换为数值坐标（用于计算）
+    const toPoint = (r, c) => ({ x: c, y: r });
+    const a = toPoint(p1.r, p1.c);
+    const b = toPoint(p2.r, p2.c);
+    const c = toPoint(p3.r, p3.c);
+    const d = toPoint(p4.r, p4.c);
+
+    // 计算方向向量
+    const ccw = (A, B, C) => {
+      return (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x);
+    };
+
+    // 两条线段相交当且仅当：
+    // (点C和D在AB两侧) 且 (点A和B在CD两侧)
+    return ccw(a, c, d) !== ccw(b, c, d) && ccw(a, b, c) !== ccw(a, b, d);
+  };
+
+  // 检查新添加的线段是否会与现有路径交叉
+  const wouldPathCross = (path, newPoint) => {
+    if (path.length < 2) return false;
+
+    // 新线段是从路径最后一个点到新点
+    const lastPoint = path[path.length - 1];
+
+    // 检查新线段是否与路径中已有的线段相交
+    // 注意：相邻的线段共享端点，不算交叉
+    for (let i = 0; i < path.length - 1; i++) {
+      const segStart = path[i];
+      const segEnd = path[i + 1];
+
+      // 跳过共享端点的相邻线段（包括紧邻的线段）
+      // 如果新线段的起点是现有线段的端点，或者新线段的终点是现有线段的端点，跳过
+      const sharesStartPoint =
+        (segStart.r === lastPoint.r && segStart.c === lastPoint.c) ||
+        (segEnd.r === lastPoint.r && segEnd.c === lastPoint.c);
+      const sharesEndPoint =
+        (segStart.r === newPoint.r && segStart.c === newPoint.c) ||
+        (segEnd.r === newPoint.r && segEnd.c === newPoint.c);
+
+      // 如果共享端点，跳过（相邻线段不算交叉）
+      if (sharesStartPoint || sharesEndPoint) {
+        continue;
+      }
+
+      // 检查两条线段是否相交（不包括端点）
+      if (doSegmentsIntersect(segStart, segEnd, lastPoint, newPoint)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   const handleMouseDown = (r, c) => {
     if (gameState === "WON") return; // 赢了就不能再画了
 
@@ -103,10 +175,7 @@ const GridBoard = ({ theme }) => {
         // 实际上，我们应该使用 ref 的值来继续连线
         if (lastPos.r === r && lastPos.c === c) return;
         // 如果是从起始位置移动到相邻格子，应该允许连线
-        const dr = Math.abs(r - lastPos.r);
-        const dc = Math.abs(c - lastPos.c);
-        const isNeighbor = (dr === 1 && dc === 0) || (dr === 0 && dc === 1);
-        if (isNeighbor) {
+        if (isNeighbor(lastPos.r, lastPos.c, r, c)) {
           // 直接设置路径，包含起始位置和目标位置
           setUserPath([lastPos, { r, c }]);
           return;
@@ -129,16 +198,21 @@ const GridBoard = ({ theme }) => {
       }
     }
 
-    const dr = Math.abs(r - lastPos.r);
-    const dc = Math.abs(c - lastPos.c);
-    const isNeighbor = (dr === 1 && dc === 0) || (dr === 0 && dc === 1);
-    if (!isNeighbor) return;
+    if (!isNeighbor(lastPos.r, lastPos.c, r, c)) return;
 
     const isObstacle = obstacles.some((obs) => obs.r === r && obs.c === c);
     if (isObstacle) return;
 
     const isVisited = currentPath.some((pos) => pos.r === r && pos.c === c);
     if (isVisited) return;
+
+    // 地狱模式下，检查路径是否会交叉（斜向移动时）
+    if (moveMode === "diagonal") {
+      if (wouldPathCross(currentPath, { r, c })) {
+        // 路径会交叉，不允许移动
+        return;
+      }
+    }
 
     // 检查即将连接的格子是否会导致错误状态
     const cellKey = getCellKey(r, c);
@@ -299,6 +373,7 @@ const GridBoard = ({ theme }) => {
     gameState,
     currentPreset,
     errorClickCell,
+    moveMode,
   ]);
 
   const getSvgPath = () => {

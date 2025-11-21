@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { generateHamiltonianPath } from "@/utils/hamiltonian";
+import { generateHamiltonianPath, generateHamiltonianPathDiagonal } from "@/utils/hamiltonian";
 import { generatePuzzle } from "@/utils/puzzleGenerator";
 import { getLevelConfig } from "@/constants/levelConfig";
 import { generateObstacles } from "@/utils/obstacleGenerator";
@@ -13,6 +13,7 @@ export const useGameStore = create((set, get) => ({
   rows: 3,
   cols: 3,
   hiddenRate: 0.2,
+  moveMode: 'orthogonal', // 'orthogonal' | 'diagonal' - 移动模式（标准/地狱）
   
   // --- 游戏数据 ---
   hints: {},        // 提示数字 Map: "r,c" -> number
@@ -33,6 +34,7 @@ export const useGameStore = create((set, get) => ({
   // 生成新游戏 (内部方法，根据传入的 level 配置生成)
   _generateGameByLevel: (level) => {
     const config = getLevelConfig(level);
+    const { moveMode } = get(); // 获取当前移动模式
     
     // 1. 生成障碍物（如果有）
     let obstacles = [];
@@ -43,10 +45,17 @@ export const useGameStore = create((set, get) => ({
       }
     }
     
-    // 2. 尝试生成有效路径 (最多重试 10 次，增加重试次数以防万一)
+    // 2. 根据移动模式选择不同的路径生成函数
+    // 如果配置中指定了 moveMode，优先使用配置的；否则使用 store 中的
+    const effectiveMoveMode = config.moveMode || moveMode;
+    const pathGenerator = effectiveMoveMode === 'diagonal' 
+      ? generateHamiltonianPathDiagonal 
+      : generateHamiltonianPath;
+    
+    // 尝试生成有效路径 (最多重试 10 次，增加重试次数以防万一)
     let path = null;
     for (let i = 0; i < 10; i++) {
-        path = generateHamiltonianPath(config.rows, config.cols, obstacles);
+        path = pathGenerator(config.rows, config.cols, obstacles);
         if (path) break;
     }
     
@@ -70,7 +79,8 @@ export const useGameStore = create((set, get) => ({
         gameState: 'PLAYING',
         hintPathLength: 0, // 重置提示路径长度
         timerStartTime: Date.now(), // 开始计时
-        timerEndTime: null // 重置结束时间
+        timerEndTime: null, // 重置结束时间
+        moveMode: effectiveMoveMode // 更新移动模式
     });
 
     return { success: true };
@@ -116,6 +126,26 @@ export const useGameStore = create((set, get) => ({
     });
   },
 
+  // 切换移动模式（标准模式/地狱模式）
+  toggleMoveMode: () => {
+    const { moveMode, currentLevel, _generateGameByLevel } = get();
+    const newMode = moveMode === 'orthogonal' ? 'diagonal' : 'orthogonal';
+    set({ moveMode: newMode });
+    // 切换模式后重新生成当前关卡
+    return _generateGameByLevel(currentLevel);
+  },
+
+  // 设置移动模式
+  setMoveMode: (mode) => {
+    if (mode !== 'orthogonal' && mode !== 'diagonal') {
+      return { success: false, message: '无效的移动模式' };
+    }
+    const { currentLevel, _generateGameByLevel } = get();
+    set({ moveMode: mode });
+    // 设置模式后重新生成当前关卡
+    return _generateGameByLevel(currentLevel);
+  },
+
   // 显示下一段提示路径
   showNextHint: () => {
     const { fullPath, hintPathLength } = get();
@@ -131,6 +161,13 @@ export const useGameStore = create((set, get) => ({
     }
     
     set({ hintPathLength: newLength });
+  },
+
+  // 显示完整答案路径（用于过关后查看官方答案）
+  showFullAnswer: () => {
+    const { fullPath } = get();
+    if (!fullPath || fullPath.length === 0) return;
+    set({ hintPathLength: fullPath.length });
   },
   
   // 获取当前计时时间（毫秒）
