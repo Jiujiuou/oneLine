@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
-import { useGameStore } from "@/store";
+import { useGameStore, useSoundStore } from "@/store";
+import { playClickSound, playCompleteSound, playErrorSound } from "@/utils/sound";
 import Cell from "./Cell";
 import styles from "./index.module.less";
 
@@ -11,10 +12,12 @@ import styles from "./index.module.less";
  */
 const GridBoard = ({ theme }) => {
   const { rows, cols, hints, userPath, obstacles, setUserPath, gameState } = useGameStore();
+  const { currentPreset } = useSoundStore();
   const [gridData, setGridData] = useState([]);
   const containerRef = useRef(null);
   const [cellSize, setCellSize] = useState(50);
   const [isDrawing, setIsDrawing] = useState(false);
+  const errorCellsRef = useRef(new Set()); // 追踪错误格子的键集合
 
   // 计算合适的格子大小
   useEffect(() => {
@@ -98,8 +101,18 @@ const GridBoard = ({ theme }) => {
     const isVisited = currentPath.some(pos => pos.r === r && pos.c === c);
     if (isVisited) return; 
 
+    // 检查即将连接的格子是否会导致错误状态
+    const cellKey = getCellKey(r, c);
+    const hintVal = hints[cellKey];
+    const willBeError = hintVal !== undefined && currentPath.length + 1 !== hintVal;
+
     currentPath.push({ r, c });
     setUserPath(currentPath);
+    
+    // 如果会导致错误状态，不播放连接音效（错误音效会在渲染逻辑中播放）
+    if (!willBeError) {
+      playClickSound(currentPreset); // 连线移动时播放音效
+    }
   };
 
   const handleMouseUp = () => {
@@ -113,6 +126,13 @@ const GridBoard = ({ theme }) => {
       window.addEventListener('mouseup', handleGlobalMouseUp);
       return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
   }, [isDrawing]);
+
+  // 监听游戏胜利状态，播放完成音效
+  useEffect(() => {
+    if (gameState === 'WON') {
+      playCompleteSound(currentPreset);
+    }
+  }, [gameState, currentPreset]);
 
 
   // --- 渲染逻辑 ---
@@ -130,6 +150,7 @@ const GridBoard = ({ theme }) => {
 
     const data = [];
     const isWon = gameState === 'WON';
+    const currentErrorCells = new Set(); // 当前帧的错误格子集合
     // 查找数字 1 的位置，用于特殊样式（可选）
     const startHintKey = Object.keys(hintMap).find(key => hintMap[key] === 1);
 
@@ -164,7 +185,8 @@ const GridBoard = ({ theme }) => {
                     if (hintVal !== undefined) {
                         if (hintVal !== userVal) {
                             status = 'error';
-                            value = hintVal; 
+                            value = hintVal;
+                            currentErrorCells.add(key); // 添加到当前错误集合
                         }
                     }
                 } else {
@@ -181,7 +203,20 @@ const GridBoard = ({ theme }) => {
       data.push(row);
     }
     setGridData(data);
-  }, [rows, cols, hints, userPath, obstacles, gameState]); 
+
+    // 检测新的错误格子（出现在当前帧但不在之前的错误集合中）
+    const newErrorCells = [...currentErrorCells].filter(
+      key => !errorCellsRef.current.has(key)
+    );
+
+    // 如果有新的错误格子，播放错误音效
+    if (newErrorCells.length > 0) {
+      playErrorSound(currentPreset);
+    }
+
+    // 更新错误格子集合
+    errorCellsRef.current = currentErrorCells;
+  }, [rows, cols, hints, userPath, obstacles, gameState, currentPreset]); 
 
   const getSvgPath = () => {
       if (userPath.length < 2) return "";
@@ -207,6 +242,16 @@ const GridBoard = ({ theme }) => {
     <div 
       ref={containerRef}
       className={styles.boardWrapper}
+      onMouseDown={(e) => {
+        // 只有当点击空白区域时才处理
+        const clickedElement = e.target;
+        const isClickOnCell = clickedElement.hasAttribute('data-cell') || 
+                              clickedElement.closest('[data-cell]');
+        
+        if (!isClickOnCell && userPath.length > 0 && gameState !== 'WON') {
+          setUserPath([]);
+        }
+      }}
     >
       <div
         className={styles.gridContainer}
@@ -252,7 +297,11 @@ const GridBoard = ({ theme }) => {
                   fontSize: cellSize * 0.4,
                   zIndex: 1 
               }}
-              onMouseDown={() => handleMouseDown(cell.r, cell.c)}
+              data-cell="true"
+              onMouseDown={() => {
+                handleMouseDown(cell.r, cell.c);
+                playClickSound(currentPreset); // 点击格子时播放音效
+              }}
               onMouseEnter={() => handleMouseEnter(cell.r, cell.c)}
               onMouseUp={handleMouseUp}
             />

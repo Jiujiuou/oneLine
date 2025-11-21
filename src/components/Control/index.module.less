@@ -9,12 +9,34 @@
   box-shadow: -4px 0 12px rgba(0, 0, 0, 0.05);
   background: #ffffff;
   z-index: 10;
+  overflow-y: auto; /* 允许控制面板本身滚动 */
+  overflow-x: visible; /* 允许下拉菜单溢出显示 */
+  
+  /* 美化滚动条 */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 4px;
+    
+    &:hover {
+      background: #bbb;
+    }
+  }
 }
 
 .section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  position: relative; /* 为下拉菜单提供定位上下文 */
+  overflow: visible; /* 允许下拉菜单溢出 */
 }
 
 .sectionTitle {
@@ -68,6 +90,14 @@
   text-align: center;
   font-weight: 500;
   animation: fadeIn 0.5s ease;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono",
+    "Source Code Pro", "Menlo", "Consolas", monospace;
+  font-size: 14px;
+}
+
+.nextLevelButton {
+  margin-top: 0;
+  width: 100%;
 }
 
 @keyframes fadeIn {

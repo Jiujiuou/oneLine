@@ -1,7 +1,8 @@
 .dropdownFormGroup {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
 }
 
 .dropdownFormLabel {
@@ -12,10 +13,15 @@
     "Source Code Pro", "Menlo", "Consolas", monospace;
   letter-spacing: 0.4px;
   user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .dropdownFormSelect {
   position: relative;
+  z-index: 1; /* 确保下拉框在正确的层级 */
+  flex: 1;
+  min-width: 0;
 }
 
 .dropdownSelectInputWrapper {
@@ -126,48 +132,59 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: var(--bg-card);
+  background: #ffffff;
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  box-shadow: var(--shadow-lg);
-  z-index: 50;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000; /* 提高 z-index，确保在所有内容上方 */
   margin-top: 8px;
-  backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
-  max-height: 360px; /* 增加最大高度以容纳更多选项 */
+  /* 移除 max-height，让所有选项都显示，不出现滚动条 */
 }
 
-/* 选项容器 - 可滚动部分 */
+/* 选项容器 */
 .dropdownOptionsContainer {
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden !important; /* 强制移除滚动条 */
+  overflow-y: hidden !important; /* 强制隐藏垂直滚动条 */
+  overflow-x: hidden !important; /* 强制隐藏水平滚动条 */
   min-height: 0; /* 允许flex子项缩小 */
+
+  /* 确保滚动条完全隐藏 */
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
 }
 
 /* 自定义添加部分 - 固定在底部 */
 .dropdownCustomAddSection {
   flex-shrink: 0; /* 防止被压缩 */
-  background: var(--bg-card);
+  background: #ffffff !important;
   border-top: 1px solid var(--border-color);
   border-radius: 0 0 8px 8px;
 }
 
 .dropdownSelectOption {
   width: 100%;
-  padding: 12px 16px;
+  padding: 8px 16px; /* 减少上下 padding */
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start; /* 改为顶部对齐，适应多行文本 */
+  align-items: center; /* 改为居中对齐 */
   gap: 8px;
   font-size: 14px;
   color: var(--text-primary);
   font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono",
     "Source Code Pro", "Menlo", "Consolas", monospace;
   letter-spacing: 0.4px;
-  min-height: 44px; /* 确保选项有足够高度 */
+  min-height: 36px; /* 减少最小高度 */
 
   &:hover {
     background: var(--bg-secondary);
@@ -187,20 +204,16 @@
   > span:first-child {
     flex: 1;
     min-width: 0; /* 允许flex项目缩小 */
-    word-break: break-all; /* 长单词强制换行 */
-    white-space: pre-wrap; /* 保留换行符并允许换行 */
-    line-height: 1.4;
-    max-height: 3.6em; /* 限制最多3行，超出显示省略号 */
+    white-space: nowrap; /* 单行显示 */
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+    line-height: 1.4;
   }
 }
 
 /* 自定义添加按钮容器 */
 .customAddButtonContainer {
-  padding: 8px 12px;
+  padding: 6px 12px; /* 减少 padding */
   display: flex;
   justify-content: center;
 }
@@ -215,7 +228,7 @@
 .dropdownOptionDivider {
   height: 1px;
   background: var(--border-color);
-  margin: 0 12px;
+  margin: 0; /* 移除左右边距，让分隔线占满宽度 */
 }
 
 /* 自定义添加选项的分隔线 - 现在由边框替代 */

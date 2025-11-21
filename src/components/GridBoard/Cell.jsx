@@ -17,6 +17,7 @@ const Cell = ({
   onMouseDown,
   onMouseEnter,
   onMouseUp,
+  ...rest
 }) => {
   // 根据状态获取对应的颜色样式
   const getThemeStyle = () => {
@@ -81,6 +82,7 @@ const Cell = ({
       onMouseDown={onMouseDown}
       onMouseEnter={onMouseEnter}
       onMouseUp={onMouseUp}
+      {...rest}
     >
       {status !== "normal" && status !== "obstacle" && value}
     </div>

@@ -5,14 +5,25 @@
   flex-direction: row;
   align-items: center;
   padding: 0 50px;
+  justify-content: space-between;
+  gap: 24px; /* 添加间距 */
+  flex-wrap: nowrap; /* 强制不换行 */
 
   .name {
-    display: flex;
-    flex: 1;
     font-family: "biantaoti";
     font-size: 30px;
     user-select: none;
     font-weight: bolder;
     color: #000;
+    white-space: nowrap; /* 标题不换行 */
+    flex-shrink: 0; /* 防止被压缩 */
+  }
+
+  .soundControl {
+    min-width: 200px;
+    max-width: 250px;
+    position: relative;
+    z-index: 100; /* 确保下拉菜单在最上层 */
+    flex-shrink: 0; /* 防止被压缩 */
   }
 }
