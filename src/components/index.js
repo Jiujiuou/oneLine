@@ -1,4 +1,5 @@
 export { default as Button } from "./Button";
+export { default as Confetti } from "./Confetti";
 export { default as Control } from "./Control";
 export { default as DropdownSelect } from "./DropdownSelect";
 export { default as GridBoard } from "./GridBoard";
