@@ -44,19 +44,35 @@ const GridBoard = ({ theme }) => {
   const [errorClickCell, setErrorClickCell] = useState(null); // 追踪错误点击的格子键
   const startPosRef = useRef(null); // 保存当前绘制的起始位置，用于处理异步状态更新问题
 
+  // 获取当前屏幕尺寸对应的 gap 和 padding 值（与 CSS 保持一致）
+  const getLayoutValues = () => {
+    const isMobile = window.innerWidth <= 768;
+    const isSmallMobile = window.innerWidth <= 480;
+    
+    if (isSmallMobile) {
+      return { gap: 4, padding: 8 };
+    } else if (isMobile) {
+      return { gap: 6, padding: 10 };
+    } else {
+      return { gap: 8, padding: 12 };
+    }
+  };
+
   // 计算合适的格子大小
   useEffect(() => {
     const calculateSize = () => {
       if (!containerRef.current) return;
+      
+      const { gap, padding } = getLayoutValues();
+      const totalPadding = padding * 2; // 左右或上下的总 padding
+      
       const containerWidth = containerRef.current.clientWidth - 40;
       const containerHeight = containerRef.current.clientHeight - 40;
-      const gap = 8;
-      const padding = 24;
 
       const widthBasedSize =
-        (containerWidth - padding - (cols - 1) * gap) / cols;
+        (containerWidth - totalPadding - (cols - 1) * gap) / cols;
       const heightBasedSize =
-        (containerHeight - padding - (rows - 1) * gap) / rows;
+        (containerHeight - totalPadding - (rows - 1) * gap) / rows;
 
       const size = Math.min(Math.min(widthBasedSize, heightBasedSize), 50);
       setCellSize(Math.max(size, 30));
@@ -378,8 +394,7 @@ const GridBoard = ({ theme }) => {
 
   const getSvgPath = () => {
     if (userPath.length < 2) return "";
-    const padding = 12;
-    const gap = 8;
+    const { gap, padding } = getLayoutValues();
     const halfCell = cellSize / 2;
     const curveRadius = 10; // 弧线半径，控制转角的平滑程度
 
@@ -491,8 +506,7 @@ const GridBoard = ({ theme }) => {
     const hintPath = fullPath.slice(0, hintPathLength);
     if (hintPath.length < 2) return "";
 
-    const padding = 12;
-    const gap = 8;
+    const { gap, padding } = getLayoutValues();
     const halfCell = cellSize / 2;
     const curveRadius = 10;
 

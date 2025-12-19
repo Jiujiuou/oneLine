@@ -1,9 +1,10 @@
 import { useEffect } from "react";
+import PropTypes from "prop-types";
 import { useGameStore, useMessageStore } from "@/store";
 import { Button, Timer, Switch } from "@/components";
 import styles from "./index.module.less";
 
-function Control() {
+function Control({ className }) {
   const {
     currentLevel,
     generateGame,
@@ -71,7 +72,7 @@ function Control() {
   };
 
   return (
-    <div className={styles.control}>
+    <div className={`${styles.control} ${className || ''}`}>
       <div className={styles.section}>
         <div className={styles.levelDisplay}>
           <span className={styles.levelLabel}>LEVEL</span>
@@ -122,5 +123,9 @@ function Control() {
     </div>
   );
 }
+
+Control.propTypes = {
+  className: PropTypes.string,
+};
 
 export default Control;

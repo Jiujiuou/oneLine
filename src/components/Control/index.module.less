@@ -29,6 +29,16 @@
       background: #bbb;
     }
   }
+  
+  @media (max-width: 768px) {
+    // 移动端在抽屉中显示时的样式
+    width: 100%;
+    height: auto;
+    padding: 16px 20px 20px;
+    gap: 20px;
+    box-shadow: none;
+    overflow-y: visible;
+  }
 }
 
 .section {
@@ -57,6 +67,11 @@
   background: #f5f7fa;
   border-radius: 8px;
   margin-bottom: 10px;
+  
+  @media (max-width: 768px) {
+    padding: 16px 0;
+    margin-bottom: 8px;
+  }
 }
 
 .levelLabel {
@@ -73,12 +88,20 @@
   line-height: 1;
   margin-top: 4px;
   font-family: 'Monaco', monospace;
+  
+  @media (max-width: 768px) {
+    font-size: 40px;
+  }
 }
 
 .buttonGroup {
   display: flex;
   gap: 12px;
   align-items: stretch;
+  
+  @media (max-width: 768px) {
+    gap: 10px;
+  }
 }
 
 .victoryMessage {

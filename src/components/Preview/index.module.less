@@ -4,4 +4,10 @@
   flex: 1;
   position: relative; // 为Confetti组件提供定位上下文
   overflow: hidden; // 确保彩带不会超出Preview区域
+  
+  @media (max-width: 768px) {
+    // 移动端棋盘区域占满整个空间
+    width: 100%;
+    height: 100%;
+  }
 }

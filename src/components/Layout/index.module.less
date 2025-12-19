@@ -16,5 +16,62 @@
     display: flex;
     flex-direction: row;
     flex: 1;
+    overflow: hidden;
+  }
+}
+
+// 桌面端控制面板 - 始终显示
+.desktopControl {
+  display: flex;
+  
+  @media (max-width: 768px) {
+    display: none !important;  // 移动端隐藏，使用 !important 确保优先级
+  }
+}
+
+// 移动端控制面板 - 在抽屉中
+.mobileControl {
+  display: flex;
+  width: 100%;
+  height: auto;
+  box-shadow: none;
+  overflow-y: visible;
+}
+
+// 浮动按钮 (FAB)
+.fabButton {
+  display: none;  // 桌面端隐藏
+  
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: #333;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    z-index: 997;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: #444;
+      transform: scale(1.05);
+    }
+    
+    &:active {
+      transform: scale(0.95);
+    }
+    
+    svg {
+      width: 24px;
+      height: 24px;
+    }
   }
 }
